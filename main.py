@@ -1,26 +1,38 @@
-
-import os
-
-from stats.stat_count import percent as percent_text
-from stats.stat_gen import moyenne_diff
-from stats import dict_valeurs_types_lettres
+import glob
+import json
+from collections import Counter
 
 
-def contenu_file(path):
+def density(text):
+    """
+    Renvoie un dictionnaire associant à chaque lettre sa densité, en pourcentage
+    """
+    text = tuple(filter(lambda c: "A" <= c <= "Z", map(str.upper, text)))
+    return {
+        letter: (occur / len(text)) * 100 for letter, occur in Counter(text).items()
+    }
 
-    with open(path, 'r') as file:
-        return file.read()
+
+def relative_diff(density, lang):
+
+    density_diff = {}
+    for char, valeur in density.items():
+        if (char := char.upper()) in lang:
+            density_diff[char] = abs(valeur - lang[char]) / lang[char]  # écart relatif
+
+    return sum(density_diff.values())
 
 
-liste_files = os.listdir("./textes")
+with open("dict_letters_repartition.json") as file:
+    density_ref = json.load(file)
 
-for fichier in liste_files:
-    print(f"test avec le fichier '{fichier}'")
-    print('')
-    print("match FR : ", moyenne_diff(percent_text(contenu_file(f"./textes/{fichier}")), dict_valeurs_types_lettres.Francais))
-    print("match EN : ", moyenne_diff(percent_text(contenu_file(f"./textes/{fichier}")), dict_valeurs_types_lettres.Anglais))
-    print("match LA : ", moyenne_diff(percent_text(contenu_file(f"./textes/{fichier}")), dict_valeurs_types_lettres.Latin))
-    print('')
-    print('---')
-    print('')
 
+for filename in glob.glob("texts/*.txt"):
+    print(f"\nTest avec le fichier '{filename}'")
+
+    for lang, density_lang_ref in density_ref.items():
+        with open(filename) as file:
+            content = file.read()
+
+        rel_diff = relative_diff(density(content), density_lang_ref)
+        print(f"Match {lang} : {100 - rel_diff}")
