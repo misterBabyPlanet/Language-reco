@@ -3,34 +3,33 @@ import glob
 from collections import Counter
 
 
-def percent(texte):
+def density(text):
     """ 
     Renvoie un dictionnaire associant à chaque lettre sa densité, en pourcentage
     """
-    dico_lettres = Counter(texte)
-    total = sum(dico_lettres.values())                                    
-    return {lettre: (occur/total)*100 for lettre, occur in dico_lettres.items()} 
+    text = tuple(filter(lambda c: 'A'<=c<='Z', map(str.upper, text)))                           
+    return {l: (occur/len(text))*100 for l, occur in Counter(text).items()} 
 
-def moyenne_diff(density, lang):
+def relative_diff(density, lang):
 
     density_diff = {}
-    for lettre, valeur in density.items():
-        if lettre in lang:
-            density_diff[lettre] = abs(valeur - lang[lettre])
+    for char, valeur in density.items():
+        if (char := char.upper()) in lang:
+            density_diff[char] = abs(valeur-lang[char]) / lang[char] # écart relatif
 
-    return 100 - sum(density_diff.values()) / len(density_diff)
+    return sum(density_diff.values())
 
 
 with open('dict_letters_repartition.json', 'r') as file:
     density_ref = json.load(file)
 
 
-for filename in glob.glob("textes/*.txt"):
+for filename in glob.glob("texts/*.txt"):
     print(f"\nTest avec le fichier '{filename}'")
 
-    for lang in density_ref:
+    for lang, density_lang_ref in density_ref.items():
         with open(filename, 'r') as file:
             content = file.read()
-        #stdev pour standard deviation
-        stdev = moyenne_diff(percent(content), density_ref[lang]) 
-        print(f"Match {lang} : {stdev}")
+
+        rel_diff = relative_diff(density(content), density_lang_ref) 
+        print(f"Match {lang} : {100-rel_diff}")
