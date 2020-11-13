@@ -1,2 +1,2 @@
 # Language-reco
-algorithme de reconnaissance de language
+Algorithme de reconnaissance de langage
