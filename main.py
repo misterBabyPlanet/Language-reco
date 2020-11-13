@@ -13,12 +13,12 @@ def density(text):
     }
 
 
-def relative_diff(density, lang):
+def diff(density, lang):
 
     density_diff = {}
     for char, valeur in density.items():
         if (char := char.upper()) in lang:
-            density_diff[char] = abs(valeur - lang[char]) / lang[char]  # écart relatif
+            density_diff[char] = abs(valeur - lang[char])
 
     return sum(density_diff.values())
 
@@ -34,5 +34,5 @@ for filename in glob.glob("texts/*.txt"):
         with open(filename) as file:
             content = file.read()
 
-        rel_diff = relative_diff(density(content), density_lang_ref)
-        print(f"Match {lang} : {100 - rel_diff}")
+        rel_diff = diff(density(content), density_lang_ref)
+        print(f"Match {lang} : {(100 - rel_diff):.2f}%")
